@@ -1,0 +1,39 @@
+{% extends "catalog/base.html" %}
+{% load custom_filtres %}
+
+{% block content %}
+<h1>Оформление заказа</h1>
+
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<ul>
+    {% with total_price=0 %}
+    {% for item in items %}
+        <li>
+            {{ item.product.name }} - {{ item.quantity }} шт. - {{ item.product.price }}₽
+            = {{ item.product.price|multiply:item.quantity }}₽
+            {% with item_total=item.product.price|multiply:item.quantity %}
+                {% with total_price=total_price|add:item_total %}
+                {% endwith %}
+            {% endwith %}
+        </li>
+    {% endfor %}
+    {% endwith %}
+    <h2>Итого: {{ total_price }}₽</h2>
+</ul>
+<form method="post">
+    {% csrf_token %}
+    <label for="address">Адрес:</label>
+    <input type="text" id="address" name="address" required>
+    <label for="phone">Номер телефона:</label>
+    <input type="text" id="phone" name="phone" required>
+    <button type="submit" class="btncart">Подтвердить заказ</button>
+</form>
+
+{% endblock %}
