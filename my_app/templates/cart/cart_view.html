@@ -1,0 +1,60 @@
+{% extends "catalog/base.html" %}
+
+{% block content %}
+<h1>Ваша корзина</h1>
+<div id="cart-items">
+    <ul>
+        {% set total_price = 0 %}
+        {% for item in items %}
+            <li id="item-{{ item.id }}">
+                {{ item.product.name }} -
+                <input type="number" id="quantity-{{ item.id }}" value="{{ item.quantity }}" min="1">
+                <button onclick="updateCartItem({{ item.id }})">Обновить</button>
+                - {{ item.product.price }}₽ x {{ item.quantity }} шт. = {{ item.product.price * item.quantity }}₽
+                {% set item_total = item.product.price * item.quantity %}
+                {% set total_price = total_price + item_total %}
+                <button onclick="removeCartItem({{ item.id }})">Удалить</button>
+            </li>
+        {% endfor %}
+    </ul>
+    <h2>Итого: {{ total_price }}₽</h2>
+    <div id="message"></div>
+</div>
+<a href="{{ url_for('cart.checkout') }}"><button type="submit" class="btncart">Оформить заказ</button></a>
+<script>
+function updateCartItem(itemId) {
+    const quantity = document.getElementById(`quantity-${itemId}`).value;
+    fetch(`/cart/update_cart_item/${itemId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'  // Добавляем CSRF токен
+        },
+        body: JSON.stringify({ quantity: quantity })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('message').innerText = data.message;
+        // Обновите общую сумму или другие элементы, если необходимо
+    })
+    .catch(error => console.error('Ошибка:', error));
+}
+
+function removeCartItem(itemId) {
+    fetch(`/cart/remove_cart_item/${itemId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'  // Добавляем CSRF токен
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('message').innerText = data.message;
+        // Удаляем элемент из списка
+        document.getElementById(`item-${itemId}`).remove();
+    })
+    .catch(error => console.error('Ошибка:', error));
+}
+</script>
+{% endblock %}

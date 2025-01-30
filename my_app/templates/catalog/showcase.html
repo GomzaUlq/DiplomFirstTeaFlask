@@ -1,0 +1,46 @@
+{% extends "catalog/base.html" %}
+{% block title %}Каталог{% endblock %}
+{% block content %}
+<h1>Каталог</h1>
+<div class="product-container">
+    {% for product in products %}
+    <div class="product-card">
+        <img src="static/images/{{ product.image }}.jpg" alt="{{ product.name }}">
+        <h2>{{ product.name }}</h2>
+        <p>{{ product.description }}</p>
+        <p>Цена: {{ product.price }}₽</p>
+        <button type="button" class="btncart" onclick="addToCart('{{ cart_id }}', '{{ product.id }}')">
+            Добавить в корзину
+        </button>
+
+    </div>
+    {% endfor %}
+</div>
+<script>
+function addToCart(cartId, productId) {
+    const csrfToken = "{{ csrf_token() }}";  // Получение CSRF-токена для защиты запросов
+
+    fetch("/cart/" + cartId + "/add_to_cart/" + productId, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,  // Передача CSRF-токена в заголовке
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ product_id: productId })  // Отправка данных
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();  // Парсинг ответа в JSON
+    })
+    .then(data => {
+        alert(data.message);  // Показ сообщения об успешном добавлении
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert('Произошла ошибка при добавлении товара в корзину.');
+    });
+}
+</script>
+{% endblock %}
